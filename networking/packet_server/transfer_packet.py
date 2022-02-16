@@ -1,7 +1,7 @@
 import struct
 
-import packet
-from packet_server.packet_server import ServerPacketEnum
+import networking.packet as packet
+from networking.packet_server.packet_server import ServerPacketEnum
 
 import game.content.map.map as map
 
@@ -16,6 +16,7 @@ class ServerInitTransferPacket(packet.GenericPacket):
         self.__map = server_map
 
     def process(self, handler):
+        handler.get_handler().set_map(self.__map)
         handler.get_handler().set_ready(True)
 
     def encode(self) -> bytes:

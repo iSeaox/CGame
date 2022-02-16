@@ -1,13 +1,14 @@
 import threading
-import server
-import client
-import packet
 
-from packet_client.packet_client import ClientPacketEnum
-import packet_client.connection_packet as connection_packet
+import networking.server as server
+import networking.client as client
+import networking.packet as packet
 
-from packet_server.packet_server import ServerPacketEnum
-import packet_server.transfer_packet as transfer_packet
+from networking.packet_client.packet_client import ClientPacketEnum
+import networking.packet_client.connection_packet as connection_packet
+
+from networking.packet_server.packet_server import ServerPacketEnum
+import networking.packet_server.transfer_packet as transfer_packet
 #cd ./Desktop/DEV-python/pygame/networking/
 
 

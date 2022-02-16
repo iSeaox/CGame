@@ -1,8 +1,9 @@
 import socket
-import net_exception
 import threading
-import packet_handler
-import packet_client.connection_packet as connection_packet
+
+import networking.net_exception as net_exception
+import networking.packet_handler as packet_handler
+import networking.packet_client.connection_packet as connection_packet
 
 import game.content.map.map as map
 
@@ -38,6 +39,13 @@ class Client:
         self.__net_listener.start()
         self.__socket.sendto(connection_packet.ClientInitPacket().encode(), self.__server_access)
 
+    def render(self, screen):
+        screen.fill(self.__map.get_background())
+        floor = pygame.Surface((1280, self.__map.get_floor_height()))
+        floor.fill((0, 0, 0))
+        floor.set_alpha(50)
+        screen.blit(floor, (0, 720 - floor.get_height()))
+
     def game_loop(self):
         while(not(self.__ready)): pass
 
@@ -54,8 +62,12 @@ class Client:
                 if event.type == pygame.QUIT:
                     self.__run = False
                     break
+
+            self.render(screen)
+
+            pygame.display.flip()
             clock.tick(60)
-            
+
         pygame.quit()
 
     def get_net_listener(self):

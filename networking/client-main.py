@@ -2,7 +2,7 @@ import os, sys
 sys.path.insert(1, os.path.abspath("."))
 
 import time
-import client
+import networking.client as client
 
 server_access = ("172.21.9.175", 20001)
 

@@ -3,7 +3,8 @@ sys.path.insert(1, os.path.abspath("."))
 print(sys.path)
 
 import time
-import server
+
+import networking.server as server
 
 local_ip = "172.21.9.175"
 local_port = 20001

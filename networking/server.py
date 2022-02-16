@@ -1,7 +1,8 @@
 import socket
 import threading
-import net_exception
-import packet_handler
+
+import networking.net_exception as net_exception
+import networking.packet_handler as packet_handler
 
 import game.content.map.map as map
 
@@ -25,7 +26,7 @@ class Server:
         self.__net_listener = threading.Thread(name="sernet-listener", target=net_listener, args=(self,), daemon=True)
         self.__net_listening = False;
         self.__buffer_size = 1024
-        self.__map = map.Map((0x42, 0xF5, 0x93), 100)
+        self.__map = map.Map((0x23, 0xb8, 0x66), 225)
 
     def start(self):
         if(self.__side == CLIENT_SIDE): raise net_exception.WrongSideException("Denied access: Client side can't use this method")
