@@ -20,7 +20,7 @@ class Server:
         self.__side = side
         self.__address_ip = addr
         self.__port = port
-        self.__players = []
+        self.__players = {}
         self.__socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.__socket.bind((self.__address_ip, self.__port))
         self.__net_listener = threading.Thread(name="sernet-listener", target=net_listener, args=(self,), daemon=True)
@@ -45,3 +45,6 @@ class Server:
 
     def net_listening(self):
         return self.__net_listening
+
+    def get_player_infos(self):
+        return self.__players

@@ -1,12 +1,10 @@
 import os, sys
 sys.path.insert(1, os.path.abspath("."))
-print(sys.path)
-
 import time
 
 import networking.server as server
 
-local_ip = "172.21.9.175"
+local_ip = "172.21.1.252"
 local_port = 20001
 buffer_size = 1024
 

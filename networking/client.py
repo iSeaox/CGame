@@ -1,5 +1,7 @@
 import socket
 import threading
+import os
+import uuid
 
 import networking.net_exception as net_exception
 import networking.packet_handler as packet_handler
@@ -11,6 +13,8 @@ import pygame
 
 SERVER_SIDE = 0
 CLIENT_SIDE = 1
+
+DATAFILE_PATH = r"./local/client/player_info.data"
 
 def net_listener(client):
     print("[{}] Listening...".format(threading.current_thread()))
@@ -32,12 +36,29 @@ class Client:
         self.__map = None
         self.__ready = False
         self.__run = True
+        print("[{}]".format(threading.currentThread()), "<init> searching for data")
+        if(os.path.exists(DATAFILE_PATH)):
+            with open(DATAFILE_PATH, "rb") as file:
+                self.__client_uuid = file.read()
+                if(self.__client_uuid != b''):
+                    self.__client_uuid = uuid.UUID(bytes=self.__client_uuid)
+                    print("[{}]".format(threading.currentThread()), "<init>", "data found: uuid -> {}".format(self.__client_uuid))
+                else:
+                    self.__client_uuid = None
+        else:
+            self.__client_uuid = None
 
-    def start(self):
+        self.__player_entity = None
+
+
+    def start(self, name):
         if(self.__side == SERVER_SIDE): raise net_exception.WrongSideException("Denied access: Server side can't use this method")
         self.__net_listening = True;
         self.__net_listener.start()
-        self.__socket.sendto(connection_packet.ClientInitPacket().encode(), self.__server_access)
+        if(self.__client_uuid == None):
+            self.__socket.sendto(connection_packet.ClientInitPacket(user=name, code=0x80).encode(), self.__server_access)
+        else:
+            self.__socket.sendto(connection_packet.ClientInitPacket(user=name, code=0x0, guuid=self.__client_uuid).encode(), self.__server_access)
 
     def render(self, screen):
         screen.fill(self.__map.get_background())
@@ -45,6 +66,8 @@ class Client:
         floor.fill((0, 0, 0))
         floor.set_alpha(50)
         screen.blit(floor, (0, 720 - floor.get_height()))
+
+        self.__player_entity.get_displayer().render(screen)
 
     def game_loop(self):
         while(not(self.__ready)): pass
@@ -69,6 +92,13 @@ class Client:
             clock.tick(60)
 
         pygame.quit()
+
+    def store_player_info(self):
+        if(not(os.path.exists(DATAFILE_PATH))):
+            open(DATAFILE_PATH, "x").close()
+
+        with open(DATAFILE_PATH, "rb+") as file:
+            file.write(self.__client_uuid.bytes)
 
     def get_net_listener(self):
         return self.__net_listener
@@ -96,3 +126,15 @@ class Client:
 
     def set_run(self, value):
         self.__run = value
+
+    def set_uuid(self, player_uuid):
+        self.__client_uuid = player_uuid
+
+    def get_uuid(self):
+        return self.__client_uuid
+
+    def set_player_entity(self, entity):
+        self.__player_entity = entity
+
+    def get_player(self):
+        return self.__player_entity

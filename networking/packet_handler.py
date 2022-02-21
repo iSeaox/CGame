@@ -23,6 +23,8 @@ def get_packet_object(raw_data):
         packet_id = ~0x80 & raw_data[0]
         if(packet_id == ServerPacketEnum.SERVER_INIT_TRANSFER_PACKET.value):
             return transfer_packet.ServerInitTransferPacket().decode(raw_data)
+        elif(packet_id == ServerPacketEnum.SERVER_PLAYER_ENTITY_TRANSFER_PACKET.value):
+            return transfer_packet.ServerPlayerEntityTransferPacket().decode(raw_data)
 
 n_clpacket_handler = 0
 n_srpacket_handler = 0
@@ -46,10 +48,9 @@ class ClientPacketHandler(threading.Thread):
     def run(self):
         packet_object = get_packet_object(self.__packet[0])
         packet_object.set_sender(self.__packet[1])
+        print("[{}]".format(threading.current_thread()), "<{}>".format(packet_object.get_sender()), "-> {}".format(packet_object.__class__.__name__))
         if(packet_object.get_side() == 0):
             packet_object.process(self)
-
-        print("[{}]".format(threading.current_thread()), "<{}>".format(packet_object.get_sender()), "-> {}".format(packet_object.__class__.__name__))
 
     def get_handler(self):
         return self.__client
@@ -65,8 +66,9 @@ class ServerPacketHandler(threading.Thread):
         packet_object = get_packet_object(self.__packet[0])
         packet_object.set_sender(self.__packet[1])
 
+        print("[{}]".format(threading.current_thread()), "<{}>".format(packet_object.get_sender()), "-> {}".format(packet_object.__class__.__name__))
         if(packet_object.get_side() == 1):
             packet_object.process(self)
-        print("[{}]".format(threading.current_thread()), "<{}>".format(packet_object.get_sender()), "-> {}".format(packet_object.__class__.__name__))
+
     def get_handler(self):
         return self.__server

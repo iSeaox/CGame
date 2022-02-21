@@ -1,4 +1,5 @@
+import uuid
 
-import ..networking
-
-print(packet_client.packet_client.ClientPacketEnum.CLIENT_INIT_PACKET.value)
+gid = uuid.uuid4()
+print(str(gid))
+print(gid.bytes)

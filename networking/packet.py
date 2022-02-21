@@ -21,10 +21,10 @@ class GenericPacket:
         return self.__id
 
     def process(self, handler):
-        raise NotImplementedError("Subclass must implemen this abstract method")
+        raise NotImplementedError("Subclass must implement this abstract method")
 
     def encode(self):
-        raise NotImplementedError("Subclass must implemen this abstract method")
+        raise NotImplementedError("Subclass must implement this abstract method")
 
     def decode(self, raw_data):
-        raise NotImplementedError("Subclass must implemen this abstract method")
+        raise NotImplementedError("Subclass must implement this abstract method")
