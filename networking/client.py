@@ -6,6 +6,7 @@ import uuid
 import networking.net_exception as net_exception
 import networking.packet_handler as packet_handler
 import networking.packet_client.connection_packet as connection_packet
+import networking.packet_client.player_packet as player_packet
 
 import game.content.map.map as map
 
@@ -85,6 +86,11 @@ class Client:
                 if event.type == pygame.QUIT:
                     self.__run = False
                     break
+                elif(event.type == pygame.KEYDOWN):
+                    pos = self.__player_entity.get_position()
+                    new_pos = (pos[0] + 1, pos[1])
+                    self.__player_entity.set_position(new_pos)
+                    self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
 
             self.render(screen)
 

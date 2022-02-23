@@ -62,6 +62,7 @@ class ServerPlayerEntityTransferPacket(packet.GenericPacket):
         return temp
 
     def decode(self, raw_data):
+        self.__data = raw_data[1:]
         self.__player_entity = player.Player().decode(raw_data[1:])
         return self
 

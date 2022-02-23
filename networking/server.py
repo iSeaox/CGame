@@ -48,3 +48,9 @@ class Server:
 
     def get_player_infos(self):
         return self.__players
+
+    def get_player_by_uuid(self, uuid):
+        for player in self.__players.values():
+            if(player.get_uuid() == uuid):
+                return player
+        return None

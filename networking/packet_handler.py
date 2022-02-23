@@ -6,9 +6,11 @@ import networking.packet as packet
 
 from networking.packet_client.packet_client import ClientPacketEnum
 import networking.packet_client.connection_packet as connection_packet
+import networking.packet_client.player_packet as player_packet
 
 from networking.packet_server.packet_server import ServerPacketEnum
 import networking.packet_server.transfer_packet as transfer_packet
+import networking.packet_server.update_packet as update_packet
 #cd ./Desktop/DEV-python/pygame/networking/
 
 
@@ -18,6 +20,8 @@ def get_packet_object(raw_data):
         packet_id = ~0x80 & raw_data[0]
         if(packet_id == ClientPacketEnum.CLIENT_INIT_PACKET.value):
             return connection_packet.ClientInitPacket().decode(raw_data)
+        elif(packet_id == ClientPacketEnum.CLIENT_PLAYER_MOVE_PACKET.value):
+            return player_packet.ClientPlayerMovePacket().decode(raw_data)
     else:
         # server side
         packet_id = ~0x80 & raw_data[0]
@@ -25,6 +29,8 @@ def get_packet_object(raw_data):
             return transfer_packet.ServerInitTransferPacket().decode(raw_data)
         elif(packet_id == ServerPacketEnum.SERVER_PLAYER_ENTITY_TRANSFER_PACKET.value):
             return transfer_packet.ServerPlayerEntityTransferPacket().decode(raw_data)
+        elif(packet_id == ServerPacketEnum.SERVER_ENTITY_UPDATE_PACKET.value):
+            return update_packet.ServerEntityUpdatePacket().decode(raw_data)
 
 n_clpacket_handler = 0
 n_srpacket_handler = 0
