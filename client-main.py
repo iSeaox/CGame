@@ -5,12 +5,15 @@ import time
 import uuid
 import networking.client as client
 
-server_access = ("10.70.208.242", 20001)
+server_access = ("172.21.6.56", 20001)
+
+#data = "admin:89e3ef8f-ca2e-4b90-b961-20cfdadb62d1&pierrot:48f7db21-5a05-4a75-9230-c34d3ee72c4a&pedro:4bea40bf-5ae0-4d99-ab12-32fb67a45615&MarCo:1fd6f327-87c4-45cf-a170-0dbcb0d2c722"
 
 game_client = client.Client(server_access, client.CLIENT_SIDE)
 
-game_client.start("admin")
-game_client.game_loop()
+
+#game_client.start("admin")
+#game_client.game_loop()
 
 time.sleep(5)
 game_client.get_socket().close()

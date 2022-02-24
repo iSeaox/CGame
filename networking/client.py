@@ -11,12 +11,14 @@ import networking.packet_client.player_packet as player_packet
 import game.content.map.map as map
 import game.entity.entity as entity
 
+import launcher.launcher as launcher
+
 import pygame
 
 SERVER_SIDE = 0
 CLIENT_SIDE = 1
 
-DATAFILE_PATH = r"./local/client/player_info.data"
+DATAFILE_PATH = r"./local/client/player_profile.data"
 
 def net_listener(client):
     print("[{}] Listening...".format(threading.current_thread()))
@@ -38,19 +40,20 @@ class Client:
         self.__map = None
         self.__ready = False
         self.__run = True
-        print("[{}]".format(threading.currentThread()), "<init> searching for data")
-        if(os.path.exists(DATAFILE_PATH)):
-            with open(DATAFILE_PATH, "rb") as file:
-                self.__client_uuid = file.read()
-                if(self.__client_uuid != b''):
-                    self.__client_uuid = uuid.UUID(bytes=self.__client_uuid)
-                    print("[{}]".format(threading.currentThread()), "<init>", "data found: uuid -> {}".format(self.__client_uuid))
-                else:
-                    self.__client_uuid = None
-        else:
-            self.__client_uuid = None
-
-        self.__player_entity = None
+        launcher_properties = launcher.launch(self)
+        # print("[{}]".format(threading.currentThread()), "<init> searching for data")
+        # if(os.path.exists(DATAFILE_PATH)):
+        #     with open(DATAFILE_PATH, "rb") as file:
+        #         self.__client_uuid = file.read()
+        #         if(self.__client_uuid != b''):
+        #             self.__client_uuid = uuid.UUID(bytes=self.__client_uuid)
+        #             print("[{}]".format(threading.currentThread()), "<init>", "data found: uuid -> {}".format(self.__client_uuid))
+        #         else:
+        #             self.__client_uuid = None
+        # else:
+        #     self.__client_uuid = None
+        #
+        # self.__player_entity = None
 
 
     def start(self, name):
