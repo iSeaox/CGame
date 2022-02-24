@@ -9,6 +9,7 @@ import networking.packet_client.connection_packet as connection_packet
 import networking.packet_client.player_packet as player_packet
 
 import game.content.map.map as map
+import game.entity.entity as entity
 
 import pygame
 
@@ -87,11 +88,25 @@ class Client:
                     self.__run = False
                     break
                 elif(event.type == pygame.KEYDOWN):
-                    pos = self.__player_entity.get_position()
-                    new_pos = (pos[0] + 1, pos[1])
-                    self.__player_entity.set_position(new_pos)
-                    self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
+                    if(event.key == 100):
+                        self.__player_entity.set_move(entity.MOVE_RIGHT)
+                        self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
+                    elif(event.key == 113):
+                        self.__player_entity.set_move(entity.MOVE_LEFT)
+                        self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
+                elif(event.type == pygame.KEYUP):
+                    if(event.key == 100):
+                        self.__player_entity.clear_move(entity.MOVE_RIGHT)
+                        self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
+                    elif(event.key == 113):
+                        self.__player_entity.clear_move(entity.MOVE_LEFT)
+                        self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
 
+            if(self.__player_entity.is_move_right()):
+                self.__player_entity.set_position((self.__player_entity.get_position()[0] + 5, self.__player_entity.get_position()[1]))
+
+            if(self.__player_entity.is_move_left()):
+                self.__player_entity.set_position((self.__player_entity.get_position()[0] - 5, self.__player_entity.get_position()[1]))
             self.render(screen)
 
             pygame.display.flip()

@@ -27,10 +27,10 @@ class Player(entity.Entity):
         return temp
 
     def decode(self, raw_data):
-        self.decode_header(raw_data[0:24])
-        self.__name = raw_data[24:44].decode()
-        self.__player_uuid = uuid.UUID(bytes=raw_data[44:60])
-        self.__head_angle = struct.unpack("H", raw_data[60:62])[0]
+        self.decode_header(raw_data[0:26])
+        self.__name = raw_data[26:46].decode()
+        self.__player_uuid = uuid.UUID(bytes=raw_data[46:62])
+        self.__head_angle = struct.unpack("H", raw_data[62:64])[0]
         return self
 
     def get_name(self):

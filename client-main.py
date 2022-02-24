@@ -5,7 +5,7 @@ import time
 import uuid
 import networking.client as client
 
-server_access = ("172.21.9.118", 20001)
+server_access = ("10.70.208.242", 20001)
 
 game_client = client.Client(server_access, client.CLIENT_SIDE)
 
