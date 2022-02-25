@@ -4,7 +4,7 @@ import time
 
 import networking.server as server
 
-local_ip = "172.21.6.56"
+local_ip = "172.21.4.123"
 local_port = 20001
 buffer_size = 1024
 

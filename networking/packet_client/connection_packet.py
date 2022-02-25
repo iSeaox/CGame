@@ -26,6 +26,7 @@ class ClientInitPacket(packet.GenericPacket):
             c_code = 0xA0
             new_uuid = uuid.uuid4()
             temp.set_uuid(new_uuid)
+            handler.get_handler().register_player(temp.get_name(), temp.get_uuid())
             ITPacket = transfer_packet.ServerInitTransferPacket(connection_code=c_code, server_map=handler.get_handler().get_map(), client_uuid=new_uuid.bytes)
             print("[{}]".format(threading.currentThread()), "<connection>", "NEW: {} ; uuid -> {}".format(self.__user, new_uuid))
         else:

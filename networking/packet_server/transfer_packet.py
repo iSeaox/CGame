@@ -19,11 +19,12 @@ class ServerInitTransferPacket(packet.GenericPacket):
         self.__client_uuid = client_uuid
 
     def process(self, handler):
-        if(0x20 & self.__connection_code):
-            handler.get_handler().set_uuid(self.__client_uuid)
-            handler.get_handler().store_player_info()
         handler.get_handler().set_map(self.__map)
+        if(0x20 & self.__connection_code):
+            handler.get_handler().new_profile(self.__client_uuid)
+
         handler.get_handler().set_ready(True)
+
 
     def encode(self) -> bytes:
         temp = struct.pack("BB", (self.__side << 7) + self.__id.value, self.__connection_code)

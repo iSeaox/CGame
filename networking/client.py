@@ -40,30 +40,24 @@ class Client:
         self.__map = None
         self.__ready = False
         self.__run = True
-        launcher_properties = launcher.launch(self)
-        # print("[{}]".format(threading.currentThread()), "<init> searching for data")
-        # if(os.path.exists(DATAFILE_PATH)):
-        #     with open(DATAFILE_PATH, "rb") as file:
-        #         self.__client_uuid = file.read()
-        #         if(self.__client_uuid != b''):
-        #             self.__client_uuid = uuid.UUID(bytes=self.__client_uuid)
-        #             print("[{}]".format(threading.currentThread()), "<init>", "data found: uuid -> {}".format(self.__client_uuid))
-        #         else:
-        #             self.__client_uuid = None
-        # else:
-        #     self.__client_uuid = None
-        #
-        # self.__player_entity = None
+        self.__launcher_properties = launcher.launch(self)
+        self.__client_uuid = None
+        if(not(self.__launcher_properties[0])):
+            self.__client_uuid = self.__launcher_properties[2]
+        self.__user = self.__launcher_properties[1]
 
 
-    def start(self, name):
+    def start(self):
         if(self.__side == SERVER_SIDE): raise net_exception.WrongSideException("Denied access: Server side can't use this method")
         self.__net_listening = True;
         self.__net_listener.start()
+
+
+
         if(self.__client_uuid == None):
-            self.__socket.sendto(connection_packet.ClientInitPacket(user=name, code=0x80).encode(), self.__server_access)
+            self.__socket.sendto(connection_packet.ClientInitPacket(user=self.__user, code=0x80).encode(), self.__server_access)
         else:
-            self.__socket.sendto(connection_packet.ClientInitPacket(user=name, code=0x0, guuid=self.__client_uuid).encode(), self.__server_access)
+            self.__socket.sendto(connection_packet.ClientInitPacket(user=self.__user, code=0x0, guuid=self.__client_uuid).encode(), self.__server_access)
 
     def render(self, screen):
         screen.fill(self.__map.get_background())
@@ -77,7 +71,6 @@ class Client:
     def game_loop(self):
         while(not(self.__ready)): pass
 
-        pygame.init()
         clock = pygame.time.Clock()
         #d_info = pygame.display.Info()
         #screen = pygame.display.set_mode((d_info.current_w, d_info.current_h))
@@ -117,12 +110,17 @@ class Client:
 
         pygame.quit()
 
-    def store_player_info(self):
-        if(not(os.path.exists(DATAFILE_PATH))):
-            open(DATAFILE_PATH, "x").close()
-
+    def new_profile(self, uuid):
+        self.__client_uuid = uuid
+        print("[{}] <init> storing the profile: ({}, {}) in memory".format(threading.current_thread().getName(), self.__user, str(self.__client_uuid)))
+        if(not(os.path.exists(DATAFILE_PATH))): open(DATAFILE_PATH, "x")
         with open(DATAFILE_PATH, "rb+") as file:
-            file.write(self.__client_uuid.bytes)
+            content = file.read()
+            if(not(len(content))):
+                file.write(content + str.encode("{}:{}".format(self.__user, self.__client_uuid)))
+            else:
+                file.write(str.encode("&{}:{}".format(self.__user, self.__client_uuid)))
+        print("[{}] <init> profile created".format(threading.current_thread().getName()))
 
     def get_net_listener(self):
         return self.__net_listener
