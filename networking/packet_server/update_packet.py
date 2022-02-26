@@ -1,6 +1,5 @@
-from enum import Enum
-
 import struct
+
 import networking.packet as packet
 from networking.packet_server.packet_server import ServerPacketEnum
 

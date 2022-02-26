@@ -5,6 +5,7 @@ import uuid
 
 import networking.net_exception as net_exception
 import networking.packet_handler as packet_handler
+
 import networking.packet_client.connection_packet as connection_packet
 import networking.packet_client.player_packet as player_packet
 
@@ -46,6 +47,8 @@ class Client:
             self.__client_uuid = self.__launcher_properties[2]
         self.__user = self.__launcher_properties[1]
 
+        self.__abort_launch = False
+
 
     def start(self):
         if(self.__side == SERVER_SIDE): raise net_exception.WrongSideException("Denied access: Server side can't use this method")
@@ -69,7 +72,10 @@ class Client:
         self.__player_entity.get_displayer().render(screen)
 
     def game_loop(self):
-        while(not(self.__ready)): pass
+        while(not(self.__ready)):
+            if(self.__abort_launch):
+                pygame.quit()
+                return
 
         clock = pygame.time.Clock()
         #d_info = pygame.display.Info()
@@ -82,6 +88,7 @@ class Client:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.__run = False
+                    self.__socket.sendto(connection_packet.ClientQuitPacket(uuid=self.__player_entity.get_uuid()).encode(), self.__server_access)
                     break
                 elif(event.type == pygame.KEYDOWN):
                     if(event.key == 100):
@@ -116,10 +123,10 @@ class Client:
         if(not(os.path.exists(DATAFILE_PATH))): open(DATAFILE_PATH, "x")
         with open(DATAFILE_PATH, "rb+") as file:
             content = file.read()
-            if(not(len(content))):
-                file.write(content + str.encode("{}:{}".format(self.__user, self.__client_uuid)))
-            else:
+            if(len(content)):
                 file.write(str.encode("&{}:{}".format(self.__user, self.__client_uuid)))
+            else:
+                file.write(str.encode("{}:{}".format(self.__user, self.__client_uuid)))
         print("[{}] <init> profile created".format(threading.current_thread().getName()))
 
     def get_net_listener(self):
@@ -146,8 +153,8 @@ class Client:
     def set_ready(self, value):
         self.__ready = value
 
-    def set_run(self, value):
-        self.__run = value
+    def clear_run(self):
+        self.__run = False
 
     def set_uuid(self, player_uuid):
         self.__client_uuid = player_uuid
@@ -160,3 +167,6 @@ class Client:
 
     def get_player(self):
         return self.__player_entity
+
+    def set_abort_launch(self):
+        self.__abort_launch = True

@@ -6,3 +6,5 @@ class ClientPacketEnum(Enum):
 
     # PLayer relative Packet
     CLIENT_PLAYER_MOVE_PACKET = 1
+
+    CLIENT_QUIT_PACKET = 2

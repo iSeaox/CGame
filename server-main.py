@@ -10,6 +10,3 @@ buffer_size = 1024
 
 game_server = server.Server(local_ip, local_port, server.SERVER_SIDE)
 game_server.start()
-
-while(1):
-    pass

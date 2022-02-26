@@ -15,5 +15,5 @@ game_client = client.Client(server_access, client.CLIENT_SIDE)
 game_client.start()
 game_client.game_loop()
 
-time.sleep(2)
+time.sleep(1)
 game_client.get_socket().close()

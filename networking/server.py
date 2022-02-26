@@ -1,11 +1,14 @@
 import socket
 import threading
 import os
+import uuid
 
 import networking.net_exception as net_exception
 import networking.packet_handler as packet_handler
 
 import game.content.map.map as map
+
+import commands.command_handler as command_handler
 
 SERVER_SIDE = 0
 CLIENT_SIDE = 1
@@ -24,6 +27,7 @@ class Server:
         self.__side = side
         self.__address_ip = addr
         self.__port = port
+        self.__abort = False
         self.__players = {}
         self.__socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self.__socket.bind((self.__address_ip, self.__port))
@@ -33,6 +37,7 @@ class Server:
         self.__map = map.Map((0x23, 0xb8, 0x66), 225)
 
         self.__registered_players = {}
+        self.__connected_players = {}
 
     def start(self):
         if(self.__side == CLIENT_SIDE): raise net_exception.WrongSideException("Denied access: Client side can't use this method")
@@ -45,18 +50,28 @@ class Server:
         self.__net_listening = True;
         self.__net_listener.start()
 
+        while(not(self.__abort)):
+            raw_command = input()
+            splited = raw_command.split(" ")
+            command_handler.command(self, raw_command, splited[0], splited[1:])
+
+        self.__socket.close()
+
+
     def register_player(self, user, uuid):
         if(not(uuid in self.__registered_players)):
             if(not(os.path.exists(PLAYER_PROFILE_FILE))): open(PLAYER_PROFILE_FILE, "x")
             with open(PLAYER_PROFILE_FILE, "rb+") as file:
                 content = file.read()
                 if(len(content)):
-                    file.write(content + str.encode("&{}:{}".format(user, uuid)))
+                    file.write(str.encode("&{}:{}".format(user, uuid)))
                 else:
                     file.write(str.encode("{}:{}".format(user, uuid)))
 
             profile_path = PLAYER_DATA_FOLDER + str(uuid) + ".profile"
             if(not(os.path.exists(profile_path))): open(profile_path, "x")
+
+            self.__registered_players[user] = uuid
             print("[{}] <load> {} has been registered".format(threading.current_thread().getName(), user))
 
     def __load_registered_player(self):
@@ -67,6 +82,14 @@ class Server:
                 for player in players:
                     temp = player.split(":")
                     self.__registered_players[temp[0]] = uuid.UUID(temp[1])
+
+    def disconnect_player(self, uuid):
+        popped = self.__connected_players.pop(uuid)
+        print("[{}] <run> {} left the game".format(threading.current_thread(), popped[1].get_name()))
+
+    def sendAll(self, packet):
+        for value in self.__connected_players.values():
+            self.__socket.sendto(packet.encode(), value[0])
 
     def get_map(self):
         return self.__map
@@ -84,10 +107,16 @@ class Server:
         return self.__players
 
     def get_player_by_uuid(self, uuid):
-        for player in self.__players.values():
-            if(player.get_uuid() == uuid):
-                return player
-        return None
+        return self.__connected_players[uuid][1]
 
-    def is_registered(self, uuid):
-        return (uuid in self.__registered_players)
+    def get_connected_players(self):
+        return self.__connected_players
+
+    def get_registered_players(self):
+        return self.__registered_players
+
+    def is_registered_by_name(self, name):
+        return (name in self.__registered_players)
+
+    def set_abort(self):
+        self.__abort = True

@@ -11,7 +11,7 @@ import networking.packet_client.player_packet as player_packet
 from networking.packet_server.packet_server import ServerPacketEnum
 import networking.packet_server.transfer_packet as transfer_packet
 import networking.packet_server.update_packet as update_packet
-#cd ./Desktop/DEV-python/pygame/networking/
+import networking.packet_server.stop_packet as stop_packet
 
 
 def get_packet_object(raw_data):
@@ -22,6 +22,8 @@ def get_packet_object(raw_data):
             return connection_packet.ClientInitPacket().decode(raw_data)
         elif(packet_id == ClientPacketEnum.CLIENT_PLAYER_MOVE_PACKET.value):
             return player_packet.ClientPlayerMovePacket().decode(raw_data)
+        elif(packet_id == ClientPacketEnum.CLIENT_QUIT_PACKET.value):
+            return connection_packet.ClientQuitPacket().decode(raw_data)
     else:
         # server side
         packet_id = ~0x80 & raw_data[0]
@@ -31,6 +33,8 @@ def get_packet_object(raw_data):
             return transfer_packet.ServerPlayerEntityTransferPacket().decode(raw_data)
         elif(packet_id == ServerPacketEnum.SERVER_ENTITY_UPDATE_PACKET.value):
             return update_packet.ServerEntityUpdatePacket().decode(raw_data)
+        elif(packet_id == ServerPacketEnum.SERVER_STOP_PACKET.value):
+            return stop_packet.ServerStopPacket().decode(raw_data)
 
 n_clpacket_handler = 0
 n_srpacket_handler = 0

@@ -7,6 +7,26 @@ import networking.packet_server.transfer_packet as transfer_packet
 from networking.packet_client.packet_client import ClientPacketEnum
 from game.entity.player import Player
 
+class ClientQuitPacket(packet.GenericPacket):
+    def __init__(self, uuid=None):
+        self.__side = 1
+        self.__id = ClientPacketEnum.CLIENT_QUIT_PACKET
+        self.__data = 0
+        self.__uuid = uuid
+
+    def process(self, handler):
+        handler.get_handler().disconnect_player(self.__uuid)
+
+    def encode(self):
+        return struct.pack("B", (self.__side << 7) + self.__id.value) + self.__uuid.bytes
+
+    def decode(self, raw_data):
+        self.__data = raw_data[1:]
+        self.__uuid = uuid.UUID(bytes=self.__data)
+        return self
+
+    def get_side(self):
+        return self.__side
 
 class ClientInitPacket(packet.GenericPacket):
 
@@ -23,20 +43,32 @@ class ClientInitPacket(packet.GenericPacket):
         temp = Player(name=self.__user, player_uuid=self.__uuid)
 
         if(0x80 & self.__code):
-            c_code = 0xA0
-            new_uuid = uuid.uuid4()
-            temp.set_uuid(new_uuid)
-            handler.get_handler().register_player(temp.get_name(), temp.get_uuid())
-            ITPacket = transfer_packet.ServerInitTransferPacket(connection_code=c_code, server_map=handler.get_handler().get_map(), client_uuid=new_uuid.bytes)
-            print("[{}]".format(threading.currentThread()), "<connection>", "NEW: {} ; uuid -> {}".format(self.__user, new_uuid))
+            if(not(handler.get_handler().is_registered_by_name(self.__user))):
+                c_code = 0xA0
+                new_uuid = uuid.uuid4()
+                temp.set_uuid(new_uuid)
+                handler.get_handler().register_player(temp.get_name(), temp.get_uuid())
+
+                ITPacket = transfer_packet.ServerInitTransferPacket(connection_code=c_code, server_map=handler.get_handler().get_map(), client_uuid=new_uuid.bytes)
+                print("[{}]".format(threading.currentThread()), "<run>", "NEW: {} join the game ({})".format(self.__user, new_uuid))
+            else:
+                c_code = 0x40
+                ITPacket = transfer_packet.ServerInitTransferPacket(connection_code=c_code, message="already register")
+                handler.get_handler().get_socket().sendto(ITPacket.encode(), self.get_sender())
+                return
         else:
-            c_code = 0x80
-            ITPacket = transfer_packet.ServerInitTransferPacket(connection_code=c_code, server_map=handler.get_handler().get_map())
-            print("[{}]".format(threading.currentThread()), "<connection>", "{} ; uuid -> {}".format(self.__user, self.__uuid))
+            if(not(temp.get_uuid() in handler.get_handler().get_connected_players())):
+                c_code = 0x80
+                ITPacket = transfer_packet.ServerInitTransferPacket(connection_code=c_code, server_map=handler.get_handler().get_map())
+                print("[{}]".format(threading.currentThread()), "<run>", "{} join the game ({})".format(self.__user, self.__uuid))
+            else:
+                c_code = 0x40
+                ITPacket = transfer_packet.ServerInitTransferPacket(connection_code=c_code, message="already connected")
+                handler.get_handler().get_socket().sendto(ITPacket.encode(), self.get_sender())
+                return
 
         temp.set_position((300.0, 200.0))
-        handler.get_handler().get_player_infos()[self.get_sender()] = temp
-        print(handler.get_handler().get_player_infos())
+        handler.get_handler().get_connected_players()[temp.get_uuid()] = (self.get_sender(), temp)
 
         PETPacket = transfer_packet.ServerPlayerEntityTransferPacket(player_entity=temp)
 
