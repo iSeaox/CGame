@@ -7,3 +7,5 @@ class ServerPacketEnum(Enum):
     SERVER_ENTITY_UPDATE_PACKET = 2
 
     SERVER_STOP_PACKET = 3
+
+    SERVER_PLAYER_QUIT_PACKET = 4

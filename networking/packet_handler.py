@@ -12,6 +12,7 @@ from networking.packet_server.packet_server import ServerPacketEnum
 import networking.packet_server.transfer_packet as transfer_packet
 import networking.packet_server.update_packet as update_packet
 import networking.packet_server.stop_packet as stop_packet
+import networking.packet_server.quit_packet as quit_packet
 
 
 def get_packet_object(raw_data):
@@ -35,6 +36,8 @@ def get_packet_object(raw_data):
             return update_packet.ServerEntityUpdatePacket().decode(raw_data)
         elif(packet_id == ServerPacketEnum.SERVER_STOP_PACKET.value):
             return stop_packet.ServerStopPacket().decode(raw_data)
+        elif(packet_id == ServerPacketEnum.SERVER_PLAYER_QUIT_PACKET.value):
+            return quit_packet.ServerPlayerQuitPacket().decode(raw_data)
 
 n_clpacket_handler = 0
 n_srpacket_handler = 0

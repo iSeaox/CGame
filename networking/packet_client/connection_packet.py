@@ -4,7 +4,9 @@ import threading
 
 import networking.packet as packet
 import networking.packet_server.transfer_packet as transfer_packet
+import networking.packet_server.quit_packet as quit_packet
 from networking.packet_client.packet_client import ClientPacketEnum
+
 from game.entity.player import Player
 
 class ClientQuitPacket(packet.GenericPacket):
@@ -16,6 +18,7 @@ class ClientQuitPacket(packet.GenericPacket):
 
     def process(self, handler):
         handler.get_handler().disconnect_player(self.__uuid)
+        handler.get_handler().sendAll(quit_packet.ServerPlayerQuitPacket(uuid=self.__uuid))
 
     def encode(self):
         return struct.pack("B", (self.__side << 7) + self.__id.value) + self.__uuid.bytes
