@@ -14,6 +14,7 @@ class Player(entity.Entity):
         if(not(server)):
             self.__displayer = display.Displayer(self)
         self.__head_angle = 90
+        self.set_position((320, 200))
 
     def encode(self) -> bytes:
         temp = self.get_encode_header()
