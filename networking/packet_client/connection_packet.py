@@ -40,7 +40,7 @@ class ClientInitPacket(packet.GenericPacket):
 
     def process(self, handler):
 
-        temp = Player(name=self.__user, player_uuid=self.__uuid)
+        temp = Player(name=self.__user, player_uuid=self.__uuid, server=True)
 
         if(0x80 & self.__code):
             if(not(handler.get_handler().is_registered_by_name(self.__user))):
@@ -53,7 +53,7 @@ class ClientInitPacket(packet.GenericPacket):
                 print("[{}]".format(threading.currentThread()), "<run>", "NEW: {} join the game ({})".format(self.__user, new_uuid))
             else:
                 c_code = 0x40
-                ITPacket = transfer_packet.ServerInitTransferPacket(connection_code=c_code, message="already register")
+                ITPacket = transfer_packet.ServerInitTransferPacket(connection_code=c_code, message="already registered")
                 handler.get_handler().get_socket().sendto(ITPacket.encode(), self.get_sender())
                 return
         else:
@@ -68,9 +68,16 @@ class ClientInitPacket(packet.GenericPacket):
                 return
 
         temp.set_position((300.0, 200.0))
+        handler.get_handler().sendAll(transfer_packet.ServerPlayerEntityTransferPacket(code=transfer_packet.PETP_CODE_NP, player_entity=temp))
+
         handler.get_handler().get_connected_players()[temp.get_uuid()] = (self.get_sender(), temp)
 
-        PETPacket = transfer_packet.ServerPlayerEntityTransferPacket(player_entity=temp)
+        tempCP = handler.get_handler().get_connected_players()
+        cp_list = []
+        for value in tempCP.values():
+            cp_list.append(value[1])
+
+        PETPacket = transfer_packet.ServerPlayerEntityTransferPacket(player_entity=temp, players=cp_list, code=transfer_packet.PETP_CODE_SC)
 
         handler.get_handler().get_socket().sendto(PETPacket.encode(), self.get_sender())
         handler.get_handler().get_socket().sendto(ITPacket.encode(), self.get_sender())

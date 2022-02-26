@@ -20,7 +20,7 @@ class ClientPlayerMovePacket(packet.GenericPacket):
     def process(self, handler):
         self.__player = handler.get_handler().get_player_by_uuid(self.__uuid)
         self.__player.decode_property(self.__property)
-        handler.get_handler().get_socket().sendto(update_packet.ServerEntityUpdatePacket(entity = self.__player).encode(), self.get_sender())
+        handler.get_handler().sendAll(update_packet.ServerEntityUpdatePacket(entity = self.__player))
 
     def encode(self):
         temp = struct.pack("B", (self.__side << 7) + self.__id.value)

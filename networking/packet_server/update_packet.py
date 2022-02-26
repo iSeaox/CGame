@@ -18,17 +18,17 @@ class ServerEntityUpdatePacket(packet.GenericPacket):
         self.__property = None
 
     def process(self, handler):
-        handler.get_handler().get_player().decode_property(self.__property)
+        handler.get_handler().get_entity_by_instance_id(self.__instance_id).decode_property(self.__property)
 
     def encode(self):
         temp = struct.pack("B", (self.__side << 7) + self.__id.value)
-        temp += struct.pack("I",self.__instance_id)
+        temp += struct.pack("I", self.__instance_id)
         temp += self.__entity.encode_property()
         return temp
 
     def decode(self, raw_data):
         self.__data = raw_data[1:]
-        self.__instance_id = raw_data[1:5]
+        self.__instance_id = struct.unpack("I", raw_data[1:5])[0]
         self.__property = raw_data[5:7]
         return self
 

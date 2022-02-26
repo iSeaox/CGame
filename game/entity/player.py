@@ -5,14 +5,14 @@ import game.entity.entity as entity
 import game.display.display as display
 
 class Player(entity.Entity):
-    def __init__(self, name=None, player_uuid=None):
+    def __init__(self, name=None, player_uuid=None, server=False):
         super().__init__()
 
         self.__id = entity.EntityEnum.PLAYER.value
         self.__name = name
         self.__player_uuid = player_uuid
-        self.__displayer = display.Displayer(self)
-
+        if(not(server)):
+            self.__displayer = display.Displayer(self)
         self.__head_angle = 90
 
     def encode(self) -> bytes:
@@ -28,7 +28,13 @@ class Player(entity.Entity):
 
     def decode(self, raw_data):
         self.decode_header(raw_data[0:26])
-        self.__name = raw_data[26:46].decode()
+
+        t_array = []
+        for b in raw_data[26:46]:
+            if(b == 0):
+                break
+            t_array.append(b)
+        self.__name = bytearray(t_array).decode()
         self.__player_uuid = uuid.UUID(bytes=raw_data[46:62])
         self.__head_angle = struct.unpack("H", raw_data[62:64])[0]
         return self

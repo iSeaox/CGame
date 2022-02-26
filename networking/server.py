@@ -109,6 +109,12 @@ class Server:
     def get_player_by_uuid(self, uuid):
         return self.__connected_players[uuid][1]
 
+    def get_player_by_name(self, name):
+        for value in self.__connected_players.values():
+            if(value[1].get_name() == name):
+                return value[1]
+        return None
+
     def get_connected_players(self):
         return self.__connected_players
 

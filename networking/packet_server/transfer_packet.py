@@ -73,24 +73,59 @@ class ServerInitTransferPacket(packet.GenericPacket):
     def get_side(self):
         return self.__side
 
+PETP_CODE_S = 0x80 # envoie uniquement l'object joueur destiner au client
+PETP_CODE_SC = 0xC0 # comme S mais avec les joueurs connectés en plus
+PETP_CODE_C = 0x40 # seulement la liste des joueurs connectés
+PETP_CODE_NP = 0x20 # uniquement pour envoyer l'object joueurs d'un joueur venant de se connceter
+
 class ServerPlayerEntityTransferPacket(packet.GenericPacket):
-    def __init__(self, player_entity=None):
+    def __init__(self, code=None, player_entity=None, players=[]):
         self.__side = 0
         self.__id = ServerPacketEnum.SERVER_PLAYER_ENTITY_TRANSFER_PACKET
         self.__data = 0
         self.__player_entity = player_entity
+        self.__connected_players = players
+        self.__code = code
 
     def process(self, handler):
-        handler.get_handler().set_player_entity(self.__player_entity)
+        if(self.__code == PETP_CODE_SC):
+            handler.get_handler().set_player_entity(self.__player_entity)
+            to_update = handler.get_handler().get_connected_players()
+            for p in self.__connected_players:
+                if(not(p in to_update) and p.get_uuid() != self.__player_entity.get_uuid()):
+                    to_update.append(p)
+        elif(self.__code == PETP_CODE_NP):
+            handler.get_handler().get_connected_players().append(self.__player_entity)
+            print("[{}] <run> {} join the game".format(threading.current_thread().getName(), self.__player_entity))
 
     def encode(self):
-        temp = struct.pack("B", (self.__side << 7) + self.__id.value)
-        temp += self.__player_entity.encode()
+        temp = struct.pack("B B", (self.__side << 7) + self.__id.value, self.__code)
+        if(self.__code == PETP_CODE_S or self.__code == PETP_CODE_NP):
+            temp += self.__player_entity.encode()
+
+        elif(self.__code == PETP_CODE_SC):
+            temp += self.__player_entity.encode()
+            for player in self.__connected_players:
+                temp += player.encode()
+
+        elif(self.__code == PETP_CODE_C):
+            for player in self.__connected_players:
+                temp += player.encode()
+
         return temp
 
     def decode(self, raw_data):
         self.__data = raw_data[1:]
-        self.__player_entity = player.Player().decode(raw_data[1:])
+        self.__code = raw_data[1]
+        c_offset = 2
+        if(0x80 & self.__code or 0x20 & self.__code):
+            c_offset = 66
+            self.__player_entity = player.Player().decode(raw_data[2:66])
+        if(0x40 & self.__code):
+            index = 0
+            while(index < len(raw_data[c_offset:])):
+                self.__connected_players.append(player.Player().decode(raw_data[(c_offset + index):(c_offset + index + 64)]))
+                index += 64
         return self
 
     def get_side(self):

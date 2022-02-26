@@ -48,6 +48,8 @@ class Client:
         self.__user = self.__launcher_properties[1]
 
         self.__abort_launch = False
+        self.__player_entity = None
+        self.__connected_players = []
 
 
     def start(self):
@@ -62,6 +64,16 @@ class Client:
         else:
             self.__socket.sendto(connection_packet.ClientInitPacket(user=self.__user, code=0x0, guuid=self.__client_uuid).encode(), self.__server_access)
 
+    def update(self):
+        temp = self.__connected_players.copy()
+        temp.append(self.__player_entity)
+        for player in temp:
+            if(player.is_move_right()):
+                player.set_position((player.get_position()[0] + 5, player.get_position()[1]))
+
+            if(player.is_move_left()):
+                player.set_position((player.get_position()[0] - 5, player.get_position()[1]))
+
     def render(self, screen):
         screen.fill(self.__map.get_background())
         floor = pygame.Surface((1280, self.__map.get_floor_height()))
@@ -70,6 +82,8 @@ class Client:
         screen.blit(floor, (0, 720 - floor.get_height()))
 
         self.__player_entity.get_displayer().render(screen)
+        for player in self.__connected_players:
+            player.get_displayer().render(screen)
 
     def game_loop(self):
         while(not(self.__ready)):
@@ -85,32 +99,29 @@ class Client:
 
         while(self.__run):
             #print(clock.get_fps())
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.__run = False
-                    self.__socket.sendto(connection_packet.ClientQuitPacket(uuid=self.__player_entity.get_uuid()).encode(), self.__server_access)
-                    break
-                elif(event.type == pygame.KEYDOWN):
-                    if(event.key == 100):
-                        self.__player_entity.set_move(entity.MOVE_RIGHT)
-                        self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
-                    elif(event.key == 113):
-                        self.__player_entity.set_move(entity.MOVE_LEFT)
-                        self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
-                elif(event.type == pygame.KEYUP):
-                    if(event.key == 100):
-                        self.__player_entity.clear_move(entity.MOVE_RIGHT)
-                        self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
-                    elif(event.key == 113):
-                        self.__player_entity.clear_move(entity.MOVE_LEFT)
-                        self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
+            if(self.__player_entity != None):
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.__run = False
+                        self.__socket.sendto(connection_packet.ClientQuitPacket(uuid=self.__player_entity.get_uuid()).encode(), self.__server_access)
+                        break
+                    elif(event.type == pygame.KEYDOWN):
+                        if(event.key == 100):
+                            self.__player_entity.set_move(entity.MOVE_RIGHT)
+                            self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
+                        elif(event.key == 113):
+                            self.__player_entity.set_move(entity.MOVE_LEFT)
+                            self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
+                    elif(event.type == pygame.KEYUP):
+                        if(event.key == 100):
+                            self.__player_entity.clear_move(entity.MOVE_RIGHT)
+                            self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
+                        elif(event.key == 113):
+                            self.__player_entity.clear_move(entity.MOVE_LEFT)
+                            self.__socket.sendto(player_packet.ClientPlayerMovePacket(player=self.__player_entity).encode(), self.__server_access)
 
-            if(self.__player_entity.is_move_right()):
-                self.__player_entity.set_position((self.__player_entity.get_position()[0] + 5, self.__player_entity.get_position()[1]))
-
-            if(self.__player_entity.is_move_left()):
-                self.__player_entity.set_position((self.__player_entity.get_position()[0] - 5, self.__player_entity.get_position()[1]))
-            self.render(screen)
+                self.update()
+                self.render(screen)
 
             pygame.display.flip()
             clock.tick(60)
@@ -170,3 +181,14 @@ class Client:
 
     def set_abort_launch(self):
         self.__abort_launch = True
+
+    def get_connected_players(self):
+        return self.__connected_players
+
+    def get_entity_by_instance_id(self, instance_id):
+        if(self.__player_entity.get_instance_id() == instance_id):
+            return self.__player_entity
+
+        for player in self.__connected_players:
+            if(player.get_instance_id() == instance_id):
+                return player
