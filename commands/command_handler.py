@@ -3,6 +3,21 @@ import threading
 
 import networking.packet_server.stop_packet as stop_packet
 
+class CommandHandler(threading.Thread):
+    def __init__(self, server):
+        threading.Thread.__init__(self, name="command-handler", daemon=True)
+        self.__server = server
+
+        self.__stop = False
+
+
+    def run(self):
+        while(not(self.__server.is_abort())):
+            raw_command = input()
+            splited = raw_command.split(" ")
+            command(self.__server, raw_command, splited[0], splited[1:])
+
+
 def command(handler, raw_command, label, args):
     if(label == "stop"):
         handler.sendAll(stop_packet.ServerStopPacket())
